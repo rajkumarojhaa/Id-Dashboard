@@ -1,32 +1,40 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from './components/ThemeProvider';
-import Header from './components/Header';
-import Sidebar from './components/Slider';
-import Dashboard from './components/Dashboard';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Suspense, lazy, useState, useEffect } from "react";
+import Loader from "./components/Loader"; // Import Loader
+import Layout from "./components/Layout"; // Import Layout
+
+// Lazy Load Pages
+const Home = lazy(() => import("./pages/Home"));
+const MovieDetails = lazy(() => import("./pages/MovieDetails"));
+const DownloadLinks = lazy(() => import("./pages/DownloadLinks"));
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate a delay before showing the content
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000); // Adjust time (3000ms = 3 seconds)
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return <Loader />; // Show loader for the specified time
+  }
 
   return (
     <Router>
-      <ThemeProvider>
-        <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-          <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900">
-              <div className="container mx-auto px-6 py-8">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  {/* Add other routes here */}
-                </Routes>
-              </div>
-            </main>
-          </div>
-        </div>
-      </ThemeProvider>
+      <Suspense fallback={<Loader />}>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="movie/:id" element={<MovieDetails />} />
+            <Route path="/download/:id" element={<DownloadLinks />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
